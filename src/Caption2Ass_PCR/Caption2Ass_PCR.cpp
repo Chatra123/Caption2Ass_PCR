@@ -1571,18 +1571,26 @@ int _tmain(int argc, _TCHAR *argv[])
     _tMyPrintf(_T("[Target] %s\r\n"), cp->TargetFileName);
     _tMyPrintf(_T("[Format] %s\r\n"), format_name[cp->format]);
 
-    // Open TS File.
-    if (_tfopen_s(&(app.fpInputTs), cp->FileName, _T("rb")) || !(app.fpInputTs)) {
+    //Open File
+    if (cp->Mode_PipeInput)
+    {
+      //stdin
+      app.fpInputTs = stdin;
+      _setmode(_fileno(stdin), _O_BINARY);
+      setvbuf(stdin, NULL, _IOFBF, 1024 * 64);
+    }
+    else
+    {
+      //file
+      if (_tfopen_s(&(app.fpInputTs), cp->FileName, _T("rb"))
+        || !(app.fpInputTs))
+      {
+        _tMyPrintf(_T("\r\n"));
         _tMyPrintf(_T("Open TS File: %s failed\r\n"), cp->FileName);
         result = C2A_ERR_PARAM;
-        goto EXIT;
-    }
-    // Check TS File.
-    if (!FindStartOffset(app.fpInputTs)) {
-        _tMyPrintf(_T("Invalid TS File.\r\n"));
         Sleep(2000);
-        result = C2A_FAILURE;
         goto EXIT;
+      }
     }
 
     // Open ASS/SRT/Log File.
