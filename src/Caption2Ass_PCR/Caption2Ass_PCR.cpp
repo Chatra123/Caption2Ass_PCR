@@ -206,8 +206,13 @@ protected:
         if (this->fp) {
             fclose(this->fp);
             if (removed) {
-                Sleep(1000);
-                remove(this->name);
+              /*他のプロセスからdelete属性無しで読み込まれると削除できない。数回繰り返す。*/
+              for (size_t i = 0; i < 3; i++)
+              {
+                Sleep(100);
+                if (remove(this->name) == 0)
+                  break;
+              }
             }
             this->fp = NULL;
         }
