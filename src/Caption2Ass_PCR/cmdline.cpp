@@ -43,7 +43,7 @@ static void usage(int argc)
 
     if (argc < 2) {
         for (int i = 0; help[i]; i++)
-            _ftprintf_s(stdout, _T("%s\n"), help[i]);
+            _ftprintf_s(stderr, _T("%s\n"), help[i]);
     }
     else {
         for (int i = 0; help[i]; i++)
@@ -175,7 +175,7 @@ extern void _tMyPrintf(IN  LPCTSTR tracemsg, ...)
 
         if (ret == S_OK) {
             DWORD ws;
-            WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE), buf, (DWORD)_tcslen(buf), &ws, NULL);
+            WriteConsole(GetStdHandle(STD_ERROR_HANDLE), buf, (DWORD)_tcslen(buf), &ws, NULL);
         }
     }
     __finally {
