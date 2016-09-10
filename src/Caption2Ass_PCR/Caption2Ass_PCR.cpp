@@ -1538,6 +1538,7 @@ int _tmain(int argc, _TCHAR *argv[])
     // Prepare the handlers.
     if (prepare_app_handler(app, argc, argv)) {
         result = C2A_ERR_MEMORY;
+        Sleep(2000);
         goto EXIT;
     }
     CCaption2AssParameter *param = static_cast<CCaption2AssParameter *>(app.GetParam(C2A_PARAM_ALL));
@@ -1545,6 +1546,7 @@ int _tmain(int argc, _TCHAR *argv[])
     // Parse arguments.
     if (ParseCmd(argc, argv, param)) {
         result = C2A_ERR_PARAM;
+        Sleep(2000 * 3);
         goto EXIT;
     }
     pid_information_t *pi = static_cast<pid_information_t *>(app.GetParam(C2A_PARAM_PID));
@@ -1553,8 +1555,10 @@ int _tmain(int argc, _TCHAR *argv[])
 
     // Initialize Caption Utility.
     if (initialize_caption_dll(app, capUtil)) {
+        _tMyPrintf(_T("\r\n"));
         _tMyPrintf(_T("Load Caption.dll failed\r\n"));
         result = C2A_ERR_DLL;
+        Sleep(2000);
         goto EXIT;
     }
 
