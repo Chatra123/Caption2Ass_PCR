@@ -1227,8 +1227,29 @@ static int main_loop(CAppHandler& app, CCaptionDllUtil& capUtil, CAPTION_LIST& c
     BYTE pbPacket[188 * 2 + 4] = { 0 };
     DWORD packetCount = 0;
 
+    const int TSPacketSize = 188;
+    bool afterResync = false;                                          //Resyncの直後？  Resync時に同期バイト'G'は取得済み
+
+
     // Main loop
-    while (fread(pbPacket, 188, 1, app.fpInputTs) == 1) {
+    while (true) {
+        size_t read;
+        if (!afterResync)
+        {
+          //通常
+          read = fread(pbPacket, TSPacketSize, 1, app.fpInputTs);
+        }
+        else
+        {
+          //Resync直後
+          //同期バイト'G'は既に確認済み。残りの187byteを読み込む。
+          //ストリーム位置を戻せないのでResync直後は処理を分ける。
+          pbPacket[0] = 'G';
+          read = fread(&pbPacket[1], TSPacketSize - 1, 1, app.fpInputTs);
+          afterResync = false;
+        }
+        if (read == 0) break;           //EOF or close pipe
+
         packetCount++;
         if (cp->detectLength > 0) {
             if (packetCount > cp->detectLength && !(app.bCreateOutput)) {
@@ -1256,13 +1277,16 @@ static int main_loop(CAppHandler& app, CCaptionDllUtil& capUtil, CAPTION_LIST& c
         parse_Packet_Header(&packet, &pbPacket[0]);
 
         if (packet.Sync != 'G') {
-            if (!resync(pbPacket, app.fpInputTs)) {
+            if (!resync2(pbPacket, app.fpInputTs, TSPacketSize)){
+                _tMyPrintf(_T("\r\n"));
                 _tMyPrintf(_T("Invalid TS File.\r\n"));
                 Sleep(2000);
                 result = C2A_FAILURE;
                 goto EXIT;
             }
-            continue;
+            //再同期後のパケットはpbPacketに読込み済、パースして続行
+            afterResync = true;
+            parse_Packet_Header(&packet, &pbPacket[0]);
         }
 
         if (packet.TsErr)

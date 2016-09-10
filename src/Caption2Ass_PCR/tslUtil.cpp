@@ -8,6 +8,68 @@
 #include "tslUtil.h"
 #include "Caption2Ass_PCR.h"
 
+
+//
+//  標準入力ストリームでも処理できるように_fseeki64()を使わないようにした。
+//  次パケットの同期バイト'G'をこの処理で読み込むため、メインループでは'G'より後を読み込むこと。
+//
+extern BOOL resync2(BYTE *pbPacket, FILE *fp, const int TSPacketSize)
+{
+  int retry = 0;
+
+  while (true)
+  {
+    retry++;
+    if (10000 * 10 <= retry) return false;                 // timeout 10 sec
+
+    BYTE *pSync = (BYTE*)memchr(pbPacket, 'G', TSPacketSize);
+    if (pSync == NULL)
+    {
+      //not found 'G'
+      size_t read = fread_s(&pbPacket[0], TSPacketSize, TSPacketSize, 1, fp);
+      if (read == 0) return false;                         //error: Unexpected EOF or closed pipe
+      continue;
+    }
+    else
+    {
+      //found 'G'
+      intptr_t _1stPartSize = pSync - pbPacket;            //  pbPacket[0] ... ['G'-1]
+      intptr_t _2ndPartSize = TSPacketSize - _1stPartSize; //                           'G' ... pbPacket[187]
+
+                                                           //_2ndPartを先頭に移動
+      memmove(pbPacket, pSync, _2ndPartSize);              //  'G' ... pbPacket[187]
+
+      int extra = TSPacketSize - _2ndPartSize;
+      if (0 < extra)
+      {                                                    //  'G' ... pbPacket[187]  extra
+        size_t read = fread_s(&pbPacket[_2ndPartSize], extra, extra, 1, fp);
+        if (read == 0) return false;                       //error: Unexpected EOF or closed pipe
+      }
+    }
+
+
+    //check next 'G'
+    BYTE nextSync = 0x00;
+    size_t read = fread_s(&nextSync, 1, 1, 1, fp);
+    if (read == 0) return true;                            //  Last packet  or  closed pipe
+
+    if (nextSync == 'G')
+    {
+      /* synced */
+      return true;
+    }
+    else
+    {                                                      //  pbPacket[0] ... pbPacket[187]
+      memmove(&pbPacket[0], &pbPacket[1], TSPacketSize - 1);
+      memcpy(&pbPacket[TSPacketSize - 1], &nextSync, 1);   //  pbPacket[1] ... pbPacket[187]  nextSync
+      continue;
+    }
+  }
+
+  throw "Unexpected resync func error";
+}
+
+
 extern BOOL FindStartOffset(FILE *fp)
 {
     BYTE buf[188 * 2] = { 0 };
