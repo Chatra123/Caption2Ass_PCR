@@ -174,6 +174,7 @@ protected:
     DWORD           index;
     size_t          string_length;
     IAppHandler    *app;
+    time_t          timeLastFlush;
 
 protected:
     void initialize(format_type format = FORMAT_INVALID, IAppHandler *app = NULL)
@@ -741,6 +742,12 @@ void CAssHandler::Dump(CAPTION_LIST& capList, DWORD endTime)
 
     if (capList.size() > 0)
         ++(this->index);
+
+    if (6 < time(NULL) - timeLastFlush)
+    {
+      fflush(fp);
+      timeLastFlush = time(NULL);
+    }
 }
 
 void CSrtHandler::Dump(CAPTION_LIST& capList, DWORD endTime)
@@ -836,6 +843,12 @@ do {                            \
             fprintf(fp, "\r\n");
         fprintf(fp, "\r\n");
         ++(this->index);
+    }
+
+    if (6 < time(NULL) - timeLastFlush)
+    {
+      fflush(fp);
+      timeLastFlush = time(NULL);
     }
 #undef ORNAMENT_START
 #undef ORNAMENT_END
