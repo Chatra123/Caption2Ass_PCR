@@ -68,6 +68,11 @@ ERROR_PARAM:
     cp->detectLength = 300 * 10000;
     _tcscpy_s(cp->ass_type, string_length, _T("Default"));
 
+    cp->Mode_PipeInput = false;
+    cp->ReadSpeedLimit_MiBsec = 0;
+    cp->NonCaptionTag = false;
+
+
     // Parse args.
     for (int i = 1; i< argc; i++) {
         if (_tcsicmp(argv[i], _T("-PMT_PID")) == 0) {
@@ -151,6 +156,26 @@ ERROR_PARAM:
             _tcscpy_s(cp->FileName, string_length, argv[i]);
         else if (_tcsicmp(cp->TargetFileName, _T("")) == 0)
             _tcscpy_s(cp->TargetFileName, string_length, argv[i]);
+        //==================================================
+        else if (_tcsicmp(argv[i], _T("-p")) == 0) {
+          cp->Mode_PipeInput = true;
+          _tcscpy_s(cp->FileName, string_length, _T("pipe"));  //"pipe" is dummy filename
+        }
+        else if (_tcsicmp(argv[i], _T("-pipe")) == 0) {
+          cp->Mode_PipeInput = true;
+          _tcscpy_s(cp->FileName, string_length, _T("pipe"));
+        }
+        else if (_tcsicmp(argv[i], _T("-limit")) == 0) {
+          i++;
+          if (i > argc)
+            goto ERROR_PARAM;
+          if (_stscanf_s(argv[i], _T("%lf"), &(cp->ReadSpeedLimit_MiBsec)) <= 0)
+            goto ERROR_PARAM;
+        }
+        else if (_tcsicmp(argv[i], _T("-NonCapTag")) == 0) {
+          cp->NonCaptionTag = true;
+        }
+        //==================================================
         else
             goto ERROR_PARAM;
     }
