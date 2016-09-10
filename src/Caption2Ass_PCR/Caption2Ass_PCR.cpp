@@ -166,12 +166,12 @@ class IOutputHandler
 {
 public:
     int             active;
+    DWORD           index;
 
 protected:
     format_type     format;
     TCHAR          *name;
     FILE           *fp;
-    DWORD           index;
     size_t          string_length;
     IAppHandler    *app;
     time_t          timeLastFlush;
@@ -1441,6 +1441,35 @@ EXIT:
     return result;
 }
 
+
+///  NonCaptionTag作成
+void CreateNonCapTag(CAppHandler &app, TCHAR *targetName)
+{
+  //字幕があったか？
+  //indexで判断、indexは初期化時に1、字幕を検出するたびに+1される。
+  bool hasCap = false;
+  ICaptionHandler** caphandle = app.caption_handle;
+  for (int i = 0; caphandle[i]; i++)
+  {
+    if (caphandle[i]->index <= 1)
+      continue;
+    else
+      hasCap = true;
+  }
+
+  if (hasCap == false)
+  {
+    TCHAR tagPath[1024] = {};
+    _tcscat_s(tagPath, 1024, targetName);
+    _tcscat_s(tagPath, 1024, _T(".noncap"));
+    FILE *fp = _tfsopen(tagPath, _T("wb"), _SH_DENYWR); //共有設定  読込みを許可
+    if (fp)
+      fclose(fp);
+  }
+}
+
+
+
 int _tmain(int argc, _TCHAR *argv[])
 {
     int             result = C2A_SUCCESS;
@@ -1521,6 +1550,10 @@ int _tmain(int argc, _TCHAR *argv[])
 
     // Main loop
     result = main_loop(app, capUtil, capList);
+
+    // Create the NonCapTag
+    if (cp->NonCaptionTag)
+      CreateNonCapTag(app, cp->TargetFileName);
 
 EXIT:
     clear_caption_list(capList);
