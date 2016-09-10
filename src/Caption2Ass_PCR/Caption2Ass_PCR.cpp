@@ -203,7 +203,8 @@ protected:
             return -2;
         if (_tcsicmp(this->name, _T("")) == 0)
             return 1;
-        if (_tfopen_s(&(this->fp), this->name, _T("wb")) || !(this->fp)) {
+        this->fp = _tfsopen(this->name, _T("wb"), _SH_DENYWR);
+        if (this->fp == NULL) {
             _tMyPrintf(_T("Open %s File: %s failed\r\n"), file_type, this->name);
             return -1;
         }
