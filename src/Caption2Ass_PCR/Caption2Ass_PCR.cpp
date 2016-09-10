@@ -1018,7 +1018,11 @@ static int output_caption(CAppHandler& app, CCaptionDllUtil& capUtil, CAPTION_LI
                 clear_caption_list(capList);
                 continue;
             }
-            app.bCreateOutput = TRUE;
+            //capList.size()を確認するようにした。
+            //  空のcapListに反応して、cp->detectLengthの処理中断ができないことがあった。
+            if (0 < capList.size()) 
+              app.bCreateOutput = TRUE;
+
             DWORD endTime = (DWORD)((PTS + it->dwWaitTime) - app.startPCR);
             for (int i = 0; handle[i]; i++)
                 if (handle[i]->active)
