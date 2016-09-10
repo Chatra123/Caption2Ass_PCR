@@ -6,6 +6,15 @@
 #include <shlwapi.h>
 #include <vector>
 
+#include <io.h>
+#include <fcntl.h>
+#include <iostream>
+#include <time.h>
+#include <chrono>
+#include <thread>
+using namespace std::chrono;
+
+
 #include "CommRoutine.h"
 #include "CaptionDllUtil.h"
 #include "cmdline.h"
