@@ -1020,7 +1020,8 @@ static int output_caption(CAppHandler& app, CCaptionDllUtil& capUtil, CAPTION_LI
                 continue;
             }
             //capList.size()を確認するようにした。
-            //  空のcapListに反応して、cp->detectLengthの処理中断ができないことがあった。
+            //　空のcapListに反応して、cp->detectLengthの処理中断ができず
+            //　空の字幕ファイルだけが残る。字幕が無いものとみなす。
             if (0 < capList.size()) 
               app.bCreateOutput = TRUE;
 
